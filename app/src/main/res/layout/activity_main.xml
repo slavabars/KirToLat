@@ -20,10 +20,12 @@
 
     <EditText
         android:id="@+id/textKir"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="textPersonName"
+        android:paddingLeft="5px"
+        android:paddingRight="5dp"
         app:layout_constraintBottom_toTopOf="@+id/labelLat"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.502"
@@ -42,10 +44,13 @@
 
     <EditText
         android:id="@+id/textLat"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:editable="false"
         android:ems="10"
         android:inputType="textPersonName"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
         app:layout_constraintBottom_toTopOf="@+id/button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -54,8 +59,10 @@
 
     <Button
         android:id="@+id/button"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
         android:text="@string/copy"
         app:layout_constraintBottom_toTopOf="@+id/listView"
         app:layout_constraintEnd_toEndOf="parent"
