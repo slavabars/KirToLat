@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">KirToLat</string>
-    <string name="copy">Корировать</string>
+    <string name="copy">Копировать</string>
     <string name="text2lat">Текст на латинице</string>
     <string name="texttolat">Текст на кириллице</string>
+    <string name="kirtolat">KirToLat</string>
 </resources>

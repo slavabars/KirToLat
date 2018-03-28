@@ -3,6 +3,10 @@ package dcns.ru.kirtolat;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.CursorLoader;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -10,6 +14,15 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.SimpleCursorAdapter;
+import android.widget.Toast;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 
 public class KirToLat extends AppCompatActivity {
 
@@ -40,11 +53,20 @@ public class KirToLat extends AppCompatActivity {
 
     String chars, newLine, replaceAr, toCopy;
 
+    ListView lvData;
+    DB db;
+    SimpleCursorAdapter adapter;
+    Cursor cursor;
+
+    private HashMap<String, String> map;
+    ArrayList<HashMap<String, String>> copylist = new ArrayList<>();
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        copyListUpdate();
 
         text2kir = (EditText)findViewById(R.id.textKir);
         text2lat = (EditText)findViewById(R.id.textLat);
@@ -96,8 +118,48 @@ public class KirToLat extends AppCompatActivity {
     }
 
     public void copyClip(View view) {
-        ClipboardManager clipboard = (ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("", text2lat.getText().toString());
-        clipboard.setPrimaryClip(clip);
+        if(text2lat.getText().length() != 0){
+            ClipboardManager clipboard = (ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("", text2lat.getText().toString());
+            clipboard.setPrimaryClip(clip);
+
+            Toast.makeText(this, "Значение скопированно", Toast.LENGTH_SHORT).show();
+
+            db = new DB(this);
+            db.open();
+
+            if(!db.getFromText(text2lat.getText().toString())){
+                Calendar calendar = Calendar.getInstance();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String strDate = sdf.format(calendar.getTime());
+                db.addRec(text2lat.getText().toString(), strDate);
+                Toast.makeText(this, "Значение записано "+text2lat.getText().toString(), Toast.LENGTH_SHORT).show();
+            }
+
+            db.close();
+
+            copyListUpdate();
+        }
+    }
+
+    private void copyListUpdate(){
+        db = new DB(this);
+        db.open();
+        cursor = db.getAllData();
+        if(cursor.moveToFirst()){
+            while(cursor.moveToNext()){
+                map = new HashMap<>();
+                map.put("text", cursor.getString(cursor.getColumnIndex("text")));
+                map.put("data", cursor.getString(cursor.getColumnIndex("data")));
+                copylist.add(map);
+            }
+        }
+        db.close();
+        lvData = (ListView)findViewById(R.id.listView);
+        SimpleAdapter adapter = new SimpleAdapter(this, copylist, R.layout.copylist,
+                new String[]{"text", "data"},
+                new int[]{R.id.copytext1, R.id.copytext2});
+        lvData.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
     }
 }
