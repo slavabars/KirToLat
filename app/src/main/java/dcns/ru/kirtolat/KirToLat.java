@@ -72,6 +72,8 @@ public class KirToLat extends AppCompatActivity {
         text2kir = (EditText)findViewById(R.id.textKir);
         text2lat = (EditText)findViewById(R.id.textLat);
 
+        context = getApplicationContext();
+
         text2lat.setEnabled(false);
 
         text2kir.addTextChangedListener(new TextWatcher() {
@@ -131,7 +133,6 @@ public class KirToLat extends AppCompatActivity {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String strDate = sdf.format(calendar.getTime());
                 db.addRec(text2lat.getText().toString(), strDate);
-                Toast.makeText(this, "Значение записано "+text2lat.getText().toString(), Toast.LENGTH_SHORT).show();
             }
 
             db.close();
@@ -171,6 +172,7 @@ public class KirToLat extends AppCompatActivity {
                     ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
                     ClipData clip = ClipData.newPlainText("", textView.getText().toString());
                     clipboard.setPrimaryClip(clip);
+                    Toast.makeText(context, "Значение скопированно", Toast.LENGTH_SHORT).show();
                 }
             }
         });
