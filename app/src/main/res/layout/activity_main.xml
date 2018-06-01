@@ -53,9 +53,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
-        android:text="@string/copy"
         android:onClick="copyClip"
-        android:textColor="@color/colorBackground"/>
+        android:text="@string/copy"/>
 
     <ListView
         android:id="@+id/listView"

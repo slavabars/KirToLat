@@ -3,20 +3,19 @@ package dcns.ru.kirtolat;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
@@ -25,6 +24,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 
 public class KirToLat extends AppCompatActivity {
+
+    public Context context;
 
     EditText text2kir, text2lat;
     String[] arrayKir = {
@@ -89,11 +90,8 @@ public class KirToLat extends AppCompatActivity {
                 for (int z = 0; z < textToArray.length; z++) {
 
                     replaceAr = String.valueOf(textToArray[z]);
-                    Log.i("array", String.valueOf(textToArray[z]));
 
                     for(int x=0; x < arrayKir.length; x++){
-
-                        Log.i("array2", String.valueOf(arrayKir[x]));
 
                         if(replaceAr.equals(arrayKir[x])){
                             replaceAr = String.valueOf(arrayLat[x]);
@@ -146,20 +144,35 @@ public class KirToLat extends AppCompatActivity {
         db = new DB(this);
         db.open();
         cursor = db.getAllData();
+        copylist.clear();
+
         if(cursor.moveToFirst()){
-            while(cursor.moveToNext()){
+            do{
                 map = new HashMap<>();
                 map.put("text", cursor.getString(cursor.getColumnIndex("text")));
                 map.put("data", cursor.getString(cursor.getColumnIndex("data")));
                 copylist.add(map);
-            }
+            }while(cursor.moveToNext());
         }
+
         db.close();
+
         lvData = (ListView)findViewById(R.id.listView);
         SimpleAdapter adapter = new SimpleAdapter(this, copylist, R.layout.copylist,
                 new String[]{"text", "data"},
                 new int[]{R.id.copytext1, R.id.copytext2});
         lvData.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
+
+        lvData.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                TextView textView = (TextView) view.findViewById(R.id.copytext1);
+                if(textView.getText()!=null){
+                    ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText("", textView.getText().toString());
+                    clipboard.setPrimaryClip(clip);
+                }
+            }
+        });
     }
 }
