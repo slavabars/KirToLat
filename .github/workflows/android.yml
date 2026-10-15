@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: android-ci-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -22,19 +22,30 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # GitHub-hosted runners ship the Android SDK, but the required platform
+      # may be missing. Install it directly instead of using setup-android,
+      # which currently fails on the removed 'tools' package.
+      - name: Ensure Android SDK components
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          echo "Android SDK: $SDK"
+          SDKMGR="$(find "$SDK/cmdline-tools" -maxdepth 3 -name sdkmanager -type f 2>/dev/null | sort | tail -1)"
+          if [ ! -d "$SDK/platforms/android-34" ] && [ -n "$SDKMGR" ]; then
+            yes | "$SDKMGR" "platforms;android-34" "build-tools;34.0.0" >/dev/null || true
+          fi
+          echo "platforms: $(ls "$SDK/platforms" 2>/dev/null | tr '\n' ' ')"
+          echo "build-tools: $(ls "$SDK/build-tools" 2>/dev/null | tr '\n' ' ')"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Configure release signing (optional)
         env:
@@ -67,7 +78,7 @@ jobs:
           ls -la dist
 
       - name: Upload APK artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: kirtolat-apks
           path: dist/*.apk
