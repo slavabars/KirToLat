@@ -1,5 +1,7 @@
 # KirToLat
 
+[![Android CI](https://github.com/slavabars/KirToLat/actions/workflows/android.yml/badge.svg)](https://github.com/slavabars/KirToLat/actions/workflows/android.yml)
+
 **Автоизменение текста с кириллицы на латиницу.**
 
 Android-приложение, которое конвертирует текст, набранный в русской раскладке, в
@@ -75,6 +77,16 @@ JAVA_HOME=/path/to/jdk-17 ./gradlew :app:assembleRelease
 ```
 
 Готовый APK: `app/build/outputs/apk/release/app-release.apk`.
+
+### Непрерывная интеграция
+
+Workflow [`.github/workflows/android.yml`](.github/workflows/android.yml) собирает
+debug- и release-APK на каждый push и pull request, публикует их как артефакты
+сборки, а при push тега вида `v*` создаёт GitHub Release и прикрепляет APK.
+
+Подпись в CI: если заданы секреты `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`,
+`KEY_ALIAS` и `KEY_PASSWORD`, release-APK подписывается боевым ключом, иначе —
+debug-ключом.
 
 ### Подпись release-сборки
 

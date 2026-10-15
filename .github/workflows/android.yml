@@ -1,0 +1,83 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Configure release signing (optional)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::notice::Secret KEYSTORE_BASE64 is not set — the release APK will be debug-signed."
+            exit 0
+          fi
+          mkdir -p keystore
+          echo "$KEYSTORE_BASE64" | base64 -d > keystore/kirtolat-release.jks
+          {
+            echo "storeFile=keystore/kirtolat-release.jks"
+            echo "storePassword=$KEYSTORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > keystore.properties
+
+      - name: Build debug and release APKs
+        run: ./gradlew :app:assembleDebug :app:assembleRelease --stacktrace
+
+      - name: Collect APKs
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk "dist/KirToLat-${GITHUB_REF_NAME}-debug.apk"
+          cp app/build/outputs/apk/release/app-release.apk "dist/KirToLat-${GITHUB_REF_NAME}-release.apk"
+          ls -la dist
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kirtolat-apks
+          path: dist/*.apk
+          if-no-files-found: error
+
+      - name: Publish GitHub release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/*.apk \
+            --title "KirToLat ${GITHUB_REF_NAME}" --generate-notes \
+          || gh release upload "${GITHUB_REF_NAME}" dist/*.apk --clobber
